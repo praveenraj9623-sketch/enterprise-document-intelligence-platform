@@ -1,60 +1,112 @@
-# Enterprise Document Intelligence Platform
+# Enterprise RAG Document Intelligence Platform
 
-A production-style Streamlit application for AI-powered business document review.
+AI-powered enterprise document intelligence system built using NLP, Semantic Search, Vector Retrieval, LLMs, Conversational AI, and Voice AI.
 
-## Overview
+---
 
-This project analyzes long business documents such as contracts, policies, agreements, and reports. It extracts text, identifies key entities, classifies clauses, retrieves relevant sections for user questions, and creates risk-aware summaries.
+# Features
 
-## Core Capabilities
+## Intelligent PDF Processing
+- Upload multiple business PDF documents
+- Automatic text extraction
+- Smart document chunking
+- Semantic indexing
 
-- PDF document ingestion
-- Text extraction and preprocessing
-- Document chunking
-- Entity extraction
-- Clause classification
-- Retrieval-based question answering
-- Executive summary generation
-- Risk review dashboard
-- Streamlit user interface
+## Conversational AI Document Q&A
+- Ask questions about uploaded documents
+- Context-aware retrieval using vector search
+- LLM-powered intelligent answers
+- Evidence-grounded responses
 
-## Tech Stack
+## Executive Summary Generation
+- AI-generated executive summaries
+- Business-focused document insights
+- Risk observations and recommendations
 
-- Python
+## Entity Intelligence
+Automatically extracts:
+- Emails
+- Dates
+- Percentages
+- Monetary values
+- Business entities
+
+## Clause Analysis
+Classifies:
+- Payment clauses
+- Termination clauses
+- Confidentiality clauses
+- Liability clauses
+- Legal/business sections
+
+## Risk Review Engine
+- Automated business risk scoring
+- High-risk keyword detection
+- Medium-risk indicator analysis
+
+## Voice AI Support
+- Voice-based document questioning
+- Text-to-speech AI answers
+- Conversational AI interaction
+
+---
+
+# Tech Stack
+
+## Frontend
 - Streamlit
-- pandas
-- pypdf
+
+## NLP & AI
+- Groq LLM
+- Sentence Transformers
+- Semantic Search
+- Vector Retrieval
+- NLP Pipelines
+
+## Machine Learning
 - scikit-learn
-- TF-IDF retrieval
-- HuggingFace SentenceTransformers
-- Gemini API with graceful fallback
-- Logistic Regression clause classifier
+- TF-IDF Retrieval
+- Embedding Similarity
 
-## Setup
+## Voice AI
+- streamlit-mic-recorder
+- gTTS
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
-```
+## Data Processing
+- pandas
+- NumPy
 
-## Environment Variables
+## PDF Processing
+- PyMuPDF
 
-Create a `.env` file:
+---
 
-```bash
-GEMINI_API_KEY=your_api_key_here
-```
+# Project Architecture
 
-The app works without the API key using retrieval-based fallback answers.
+```text
+enterprise_doc_ai_production/
+│
+├── app.py
+├── requirements.txt
+├── README.md
+├── .gitignore
+│
+├── src/
+│   ├── clause_classifier.py
+│   ├── document_loader.py
+│   ├── entity_extraction.py
+│   ├── llm_service.py
+│   ├── reporting.py
+│   ├── retrieval_engine.py
+│   ├── risk_engine.py
+│   └── text_processing.py
+│
+├── data/
+├── outputs/
+└── screenshots/
+'''
 
-## Recommended Dataset
 
-CUAD - Contract Understanding Atticus Dataset.
 
-Use 3 to 5 PDF contracts first for testing.
-
-## Resume Description
-
-Built a production-style enterprise document intelligence platform for business contract analysis using NLP, information extraction, retrieval-based question answering, clause classification, and risk summarization. Developed a Streamlit interface for PDF upload, entity intelligence, clause review, document Q&A, and executive summary generation.
+LinkedIn: https://www.linkedin.com/in/praveen-raj-a-b05abb2a3/
+GitHub: https://github.com/praveenraj9623-sketch
