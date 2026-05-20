@@ -1,4 +1,7 @@
 import streamlit as st
+import tempfile
+from streamlit_mic_recorder import speech_to_text
+from gtts import gTTS
 
 from src.document_loader import extract_text_from_pdf
 from src.text_processing import chunk_text
@@ -15,6 +18,7 @@ st.set_page_config(
     page_icon="📄",
     layout="wide",
 )
+
 
 st.markdown(
     """
@@ -48,7 +52,7 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class="subtitle">AI-powered document review, clause analysis, entity extraction, retrieval-based Q&A, and risk summarization.</div>',
+    '<div class="subtitle">AI-powered document review, clause analysis, entity extraction, retrieval-based Q&A, voice interaction, and risk summarization.</div>',
     unsafe_allow_html=True,
 )
 
@@ -66,6 +70,8 @@ with st.sidebar:
     overlap = st.slider("Chunk Overlap", 50, 250, 100, 10)
     top_k = st.slider("Retrieved Sections", 1, 6, 3, 1)
 
+    enable_voice_output = st.toggle("Enable Voice Output", value=True)
+
     st.caption(
         "Use Fast Keyword Search for quick demos. Use Semantic AI Search for stronger meaning-based retrieval."
     )
@@ -82,6 +88,9 @@ if "executive_summary" not in st.session_state:
 
 if "active_page" not in st.session_state:
     st.session_state.active_page = "Document Q&A"
+
+if "last_audio_answer" not in st.session_state:
+    st.session_state.last_audio_answer = ""
 
 
 uploaded_files = st.file_uploader(
@@ -140,10 +149,24 @@ if uploaded_files:
             st.session_state.summary_df = summary_df
             st.session_state.chat_history = []
             st.session_state.executive_summary = ""
+            st.session_state.last_audio_answer = ""
             st.session_state.processed = True
             st.session_state.active_page = "Document Q&A"
 
         st.success("Document analysis completed successfully.")
+
+
+def speak_answer(answer_text: str):
+    try:
+        clean_answer = answer_text.replace("#", "").replace("*", "")
+        tts = gTTS(text=clean_answer, lang="en")
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as audio_file:
+            tts.save(audio_file.name)
+            st.audio(audio_file.name, format="audio/mp3")
+
+    except Exception:
+        st.info("Voice output is temporarily unavailable.")
 
 
 if st.session_state.processed:
@@ -181,16 +204,26 @@ if st.session_state.processed:
             unsafe_allow_html=True,
         )
         st.write(
-            "Ask questions about the uploaded documents. Answers are grounded in retrieved document sections."
+            "Ask questions about the uploaded documents using text or voice. Answers are grounded in retrieved document sections."
         )
 
         for message in st.session_state.chat_history:
             with st.chat_message(message["role"]):
                 st.write(message["content"])
 
-        question = st.chat_input(
+        st.subheader("Voice Input")
+        voice_question = speech_to_text(
+            language="en",
+            use_container_width=True,
+            just_once=True,
+            key="voice_question_input",
+        )
+
+        typed_question = st.chat_input(
             "Ask about payment terms, termination, confidentiality, liability, risks..."
         )
+
+        question = voice_question if voice_question else typed_question
 
         if question:
             st.session_state.chat_history.append(
@@ -204,11 +237,16 @@ if st.session_state.processed:
                 {"role": "assistant", "content": answer}
             )
 
+            st.session_state.last_audio_answer = answer
+
             with st.chat_message("user"):
                 st.write(question)
 
             with st.chat_message("assistant"):
                 st.write(answer)
+
+                if enable_voice_output:
+                    speak_answer(answer)
 
             with st.expander("Retrieved document evidence"):
                 for item in retrieved:
@@ -239,6 +277,10 @@ if st.session_state.processed:
 
         if st.session_state.executive_summary:
             st.markdown(st.session_state.executive_summary)
+
+            if enable_voice_output:
+                st.subheader("Voice Output")
+                speak_answer(st.session_state.executive_summary)
 
         st.subheader("Processing Summary")
         st.dataframe(st.session_state.summary_df, use_container_width=True)
