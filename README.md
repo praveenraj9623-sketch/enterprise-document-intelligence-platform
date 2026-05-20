@@ -104,9 +104,63 @@ enterprise_doc_ai_production/
 ├── data/
 ├── outputs/
 └── screenshots/
-'''
+```
 
+---
 
+## Deployment
 
-LinkedIn: https://www.linkedin.com/in/praveen-raj-a-b05abb2a3/
-GitHub: https://github.com/praveenraj9623-sketch
+This application can be deployed for free using:
+
+- Streamlit Community Cloud
+
+---
+
+# Use Cases
+
+- Enterprise document intelligence
+- Legal contract analysis
+- Conversational AI document assistant
+- Risk review automation
+- Business clause analysis
+- Semantic document search
+- Voice-enabled AI assistant
+
+---
+
+# Skills Demonstrated
+
+- Natural Language Processing (NLP)
+- Conversational AI
+- Semantic Search
+- Vector Retrieval
+- Retrieval-Augmented Generation (RAG)
+- Large Language Model (LLM) Integration
+- Voice AI
+- Information Extraction
+- Streamlit Deployment
+- Enterprise AI Workflow Design
+
+---
+
+# Future Improvements
+
+- OCR support for scanned PDFs
+- Multi-language document support
+- Fine-tuned transformer models
+- Cloud vector database integration
+- Role-based authentication
+- Real-time collaboration support
+- Advanced legal AI pipelines
+
+---
+
+# Author
+
+## Praveen Raj
+
+- LinkedIn:  
+  https://www.linkedin.com/in/praveen-raj-a-b05abb2a3/
+
+- GitHub:  
+  https://github.com/praveenraj9623-sketch
