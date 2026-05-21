@@ -3,6 +3,51 @@
 AI-powered enterprise document intelligence system built using NLP, Semantic Search, Vector Retrieval, LLMs, Conversational AI, and Voice AI.
 
 ---
+## Live Demo
+
+🔗 Streamlit Application:  
+https://enterprise-document-intelligence-platform-ujsr9obkeqkfj23jhvjb.streamlit.app/
+
+---
+
+## Deployment Notes
+
+The deployed Streamlit Cloud version currently uses lightweight retrieval for stable cloud execution.
+
+### Semantic Search Support
+
+This project supports two retrieval modes:
+
+- Fast Keyword Search (TF-IDF based)
+- Semantic AI Search (Sentence Transformers + Vector Embeddings)
+
+### Important Note About Streamlit Cloud Deployment
+
+The complete semantic vector search pipeline works correctly in the local development environment. However, Streamlit Community Cloud has memory and dependency limitations for heavy AI libraries such as:
+
+```txt
+sentence-transformers
+torch
+```
+
+Because of these cloud limitations, the deployed public version may automatically fall back to lightweight TF-IDF retrieval for stability and faster deployment.
+
+### Full Semantic Search (Local Machine)
+
+To run full semantic embedding-based retrieval locally, add the following packages to `requirements.txt`:
+
+```txt
+sentence-transformers
+torch
+faiss-cpu
+```
+
+Then run locally using:
+
+```bash
+streamlit run app.py
+```
+
 
 # Features
 
