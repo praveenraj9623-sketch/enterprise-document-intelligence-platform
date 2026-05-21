@@ -1,7 +1,6 @@
 # Enterprise RAG Document Intelligence Platform
 
-AI-powered enterprise document intelligence system built using NLP, Semantic Search, Vector Retrieval, LLMs, Conversational AI, and Voice AI.
-
+Enterprise Document Intelligence Platform is a voice-enabled AI application that helps users analyze PDF documents using NLP, retrieval-based search, LLM-powered question answering, executive summaries, entity extraction, clause analysis, and rule-based risk review. The system is built with Python, Streamlit, PyMuPDF, scikit-learn, Groq LLM, and voice AI libraries.
 ---
 ## Live Demo
 
