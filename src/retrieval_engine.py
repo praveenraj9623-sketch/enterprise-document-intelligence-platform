@@ -1,4 +1,6 @@
+import time
 import numpy as np
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -15,21 +17,36 @@ class RetrievalEngine:
         self.embedding_model = None
         self.embeddings = None
 
+        self.model_name = None
+        self.error_message = None
+        self.indexing_time = 0.0
+
+    def _get_texts(self, chunks):
+        return [
+            chunk["text"] if isinstance(chunk, dict) else str(chunk)
+            for chunk in chunks
+        ]
+
     def build_index(self, chunks):
+        start_time = time.time()
+
         self.chunks = chunks
+        self.error_message = None
+        self.model_name = None
 
         if not chunks:
             self.active_method = "none"
+            self.indexing_time = time.time() - start_time
             return self.active_method
+
+        texts = self._get_texts(chunks)
 
         if self.method == "semantic":
             try:
                 from sentence_transformers import SentenceTransformer
 
-                # Lightweight model suitable for Streamlit Cloud deployment
-                self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-
-                texts = [chunk["text"] if isinstance(chunk, dict) else str(chunk) for chunk in chunks]
+                self.model_name = "all-MiniLM-L6-v2"
+                self.embedding_model = SentenceTransformer(self.model_name)
 
                 self.embeddings = self.embedding_model.encode(
                     texts,
@@ -39,10 +56,14 @@ class RetrievalEngine:
                 )
 
                 self.active_method = "semantic"
+                self.indexing_time = time.time() - start_time
                 return self.active_method
 
             except Exception as error:
-                print(f"Semantic search failed. Falling back to TF-IDF. Error: {error}")
+                self.error_message = str(error)
+                print(
+                    f"Semantic search failed. Falling back to TF-IDF. Error: {error}"
+                )
                 self.active_method = "tfidf"
 
         self.vectorizer = TfidfVectorizer(
@@ -51,10 +72,10 @@ class RetrievalEngine:
             ngram_range=(1, 2),
         )
 
-        texts = [chunk["text"] if isinstance(chunk, dict) else str(chunk) for chunk in chunks]
         self.tfidf_matrix = self.vectorizer.fit_transform(texts)
 
         self.active_method = "tfidf"
+        self.indexing_time = time.time() - start_time
         return self.active_method
 
     def search(self, query, top_k=3):
@@ -87,6 +108,9 @@ class RetrievalEngine:
                 )
 
             return results
+
+        if self.vectorizer is None or self.tfidf_matrix is None:
+            return []
 
         query_vector = self.vectorizer.transform([query])
         scores = cosine_similarity(query_vector, self.tfidf_matrix).flatten()

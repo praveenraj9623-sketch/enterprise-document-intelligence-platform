@@ -1,5 +1,6 @@
-import streamlit as st
 import tempfile
+
+import streamlit as st
 from streamlit_mic_recorder import speech_to_text
 from gtts import gTTS
 
@@ -63,7 +64,9 @@ with st.sidebar:
     retrieval_method = st.selectbox(
         "Search Engine",
         ["tfidf", "semantic"],
-        format_func=lambda x: "Fast Keyword Search" if x == "tfidf" else "Semantic AI Search",
+        format_func=lambda x: "Fast Keyword Search"
+        if x == "tfidf"
+        else "Semantic AI Search",
     )
 
     chunk_size = st.slider("Document Chunk Size", 400, 1200, 650, 50)
@@ -73,7 +76,7 @@ with st.sidebar:
     enable_voice_output = st.toggle("Enable Voice Output", value=True)
 
     st.caption(
-        "Use Fast Keyword Search for quick demos. Use Semantic AI Search for stronger meaning-based retrieval."
+        "Fast Keyword Search uses TF-IDF. Semantic AI Search uses all-MiniLM-L6-v2 embeddings."
     )
 
 
@@ -91,6 +94,18 @@ if "active_page" not in st.session_state:
 
 if "last_audio_answer" not in st.session_state:
     st.session_state.last_audio_answer = ""
+
+if "active_method" not in st.session_state:
+    st.session_state.active_method = ""
+
+if "retrieval_model_name" not in st.session_state:
+    st.session_state.retrieval_model_name = None
+
+if "retrieval_error" not in st.session_state:
+    st.session_state.retrieval_error = None
+
+if "indexing_time" not in st.session_state:
+    st.session_state.indexing_time = 0.0
 
 
 uploaded_files = st.file_uploader(
@@ -118,7 +133,12 @@ if uploaded_files:
                 )
                 st.stop()
 
-            chunks = chunk_text(combined_text, chunk_size=chunk_size, overlap=overlap)
+            chunks = chunk_text(
+                combined_text,
+                chunk_size=chunk_size,
+                overlap=overlap,
+            )
+
             entities_df = extract_entities(combined_text)
 
             retriever = RetrievalEngine(method=retrieval_method)
@@ -143,6 +163,15 @@ if uploaded_files:
             st.session_state.entities_df = entities_df
             st.session_state.retriever = retriever
             st.session_state.active_method = active_method
+            st.session_state.retrieval_model_name = getattr(
+                retriever, "model_name", None
+            )
+            st.session_state.retrieval_error = getattr(
+                retriever, "error_message", None
+            )
+            st.session_state.indexing_time = getattr(
+                retriever, "indexing_time", 0.0
+            )
             st.session_state.clause_df = clause_df
             st.session_state.risk_result = risk_result
             st.session_state.risk_text = risk_text
@@ -169,6 +198,32 @@ def speak_answer(answer_text: str):
         st.info("Voice output is temporarily unavailable.")
 
 
+def show_retrieval_status():
+    method = st.session_state.active_method.upper()
+
+    if st.session_state.active_method == "semantic":
+        st.success(
+            f"Actual Search Method Used: {method} | "
+            f"Embedding Model: {st.session_state.retrieval_model_name} | "
+            f"Indexing Time: {st.session_state.indexing_time:.2f} seconds"
+        )
+
+    elif st.session_state.active_method == "tfidf":
+        st.info(
+            f"Actual Search Method Used: {method} | "
+            f"Indexing Time: {st.session_state.indexing_time:.2f} seconds"
+        )
+
+        if st.session_state.retrieval_error:
+            st.warning(
+                "Semantic search was requested, but the embedding model could not load. "
+                f"Fallback reason: {st.session_state.retrieval_error}"
+            )
+
+    else:
+        st.warning("No retrieval index is currently active.")
+
+
 if st.session_state.processed:
     risk = st.session_state.risk_result
 
@@ -177,6 +232,8 @@ if st.session_state.processed:
     col2.metric("Text Sections", len(st.session_state.chunks))
     col3.metric("Entities", len(st.session_state.entities_df))
     col4.metric("Risk Level", risk["Risk Level"])
+
+    show_retrieval_status()
 
     st.divider()
 
@@ -203,6 +260,7 @@ if st.session_state.processed:
             '<div class="section-title">Document Q&A</div>',
             unsafe_allow_html=True,
         )
+
         st.write(
             "Ask questions about the uploaded documents using text or voice. Answers are grounded in retrieved document sections."
         )
@@ -249,9 +307,19 @@ if st.session_state.processed:
                     speak_answer(answer)
 
             with st.expander("Retrieved document evidence"):
+                st.info(
+                    f"Search method used for this answer: {st.session_state.active_method.upper()}"
+                )
+
+                if st.session_state.active_method == "semantic":
+                    st.success(
+                        f"Embedding model: {st.session_state.retrieval_model_name}"
+                    )
+
                 for item in retrieved:
                     st.markdown(
-                        f"**Section ID:** {item['chunk_id']} | **Relevance Score:** {item['score']:.3f}"
+                        f"**Section ID:** {item['chunk_id']} | "
+                        f"**Relevance Score:** {item['score']:.3f}"
                     )
                     st.write(item["text"][:1500])
                     st.divider()
@@ -261,6 +329,7 @@ if st.session_state.processed:
             '<div class="section-title">Executive Summary</div>',
             unsafe_allow_html=True,
         )
+
         st.write("Generate a business-friendly summary of the uploaded documents.")
 
         if st.button("Generate Executive Summary", type="primary"):
@@ -290,6 +359,7 @@ if st.session_state.processed:
             '<div class="section-title">Entity Intelligence</div>',
             unsafe_allow_html=True,
         )
+
         st.write(
             "Automatically extracted dates, monetary values, percentages, emails, and business-critical terms."
         )
@@ -308,6 +378,7 @@ if st.session_state.processed:
             '<div class="section-title">Clause Analysis</div>',
             unsafe_allow_html=True,
         )
+
         st.write("Document sections classified into common business clause categories.")
 
         st.dataframe(st.session_state.clause_df, use_container_width=True)
@@ -317,6 +388,7 @@ if st.session_state.processed:
             .value_counts()
             .reset_index()
         )
+
         counts.columns = ["Clause Type", "Count"]
 
         st.bar_chart(counts.set_index("Clause Type"))
